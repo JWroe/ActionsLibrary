@@ -32,5 +32,26 @@ namespace ActionsLibrary.Tests
 
             Assert.That(countOfActionsExecuted, Is.EqualTo(expectedExecutionCount), $"{nameof(countOfActionsExecuted)} should have been {expectedExecutionCount}, but was {countOfActionsExecuted}");
         }
+
+        [Test]
+        public void ActionsAreExecutedInOrder()
+        {
+            var result = 0;
+
+            var actionsList = new List<Action>
+                              {
+                                  () => result += 5,
+                                  () => result -= 4,
+                                  () => result *= 6,
+                                  () => result /= 2,
+                              };
+
+            var actions = new BackgroundActions(actionsList);
+
+            actions.Execute();
+
+            const int expectedResult = 3;
+            Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
+        }
     }
 }
