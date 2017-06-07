@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace ActionsLibrary.Tests
             var actionWasExecuted = false;
             var actions = new BackgroundActions(() => actionWasExecuted = true);
 
-            await actions.StartExecution();
+            await actions.BeginExecuting();
 
             Assert.That(actionWasExecuted, Is.True, $"{nameof(actionWasExecuted)} should have been set to true if action was executed as expected");
         }
@@ -31,7 +31,7 @@ namespace ActionsLibrary.Tests
 
             var actions = new BackgroundActions(actionsList);
 
-            await actions.StartExecution();
+            await actions.BeginExecuting();
 
             Assert.That(countOfActionsExecuted, Is.EqualTo(expectedExecutionCount), $"{nameof(countOfActionsExecuted)} should have been {expectedExecutionCount}, but was {countOfActionsExecuted}");
         }
@@ -51,7 +51,7 @@ namespace ActionsLibrary.Tests
 
             var actions = new BackgroundActions(actionsList);
 
-            await actions.StartExecution();
+            await actions.BeginExecuting();
 
             const int expectedResult = 3;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
@@ -63,10 +63,10 @@ namespace ActionsLibrary.Tests
             var result = 0;
 
             await new BackgroundActions(() => result += 5)
-                .AddAction(() => result -= 4)
-                .AddAction(() => result *= 6)
-                .AddAction(() => result /= 2)
-                .StartExecution();
+                .Add(() => result -= 4)
+                .Add(() => result *= 6)
+                .Add(() => result /= 2)
+                .BeginExecuting();
 
             const int expectedResult = 3;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
@@ -78,11 +78,11 @@ namespace ActionsLibrary.Tests
             var result = 0;
 
             var actions = new BackgroundActions(() => result += 5);
-            actions.StartExecution();
+            actions.BeginExecuting();
 
-            actions.AddAction(() => result -= 4)
-                   .AddAction(() => result *= 6)
-                   .AddAction(() => result /= 2);
+            actions.Add(() => result -= 4)
+                   .Add(() => result *= 6)
+                   .Add(() => result /= 2);
 
             await actions.ActionExecution;
 
@@ -96,13 +96,13 @@ namespace ActionsLibrary.Tests
             var result = 0;
 
             var actions = new BackgroundActions(() => result += 10);
-            actions.StartExecution();
+            actions.BeginExecuting();
 
             var taskOne = Task.Run(() =>
                                    {
                                        for (var i = 0; i < 10000; i++)
                                        {
-                                           actions.AddAction(() => result += i);
+                                           actions.Add(() => result += i);
                                        }
                                    });
 
@@ -110,7 +110,7 @@ namespace ActionsLibrary.Tests
                                    {
                                        for (var i = 0; i < 10000; i++)
                                        {
-                                           actions.AddAction(() => result -= i);
+                                           actions.Add(() => result -= i);
                                        }
                                    });
             Task.WaitAll(taskOne, taskTwo, actions.ActionExecution);
@@ -125,7 +125,7 @@ namespace ActionsLibrary.Tests
             var watch = Stopwatch.StartNew();
             var waitTime = TimeSpan.FromSeconds(1);
             var actions = new BackgroundActions(() => Thread.Sleep(waitTime));
-            actions.StartExecution();
+            actions.BeginExecuting();
 
             Assert.That(watch.Elapsed, Is.LessThan(waitTime), $"Elapsed time should have been less than {nameof(waitTime)} ({waitTime}), but was {watch.Elapsed}. Is the call blocking on execution?");
         }

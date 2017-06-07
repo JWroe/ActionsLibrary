@@ -7,20 +7,22 @@ namespace ActionsLibrary
 {
     public class BackgroundActions
     {
-        private readonly ConcurrentQueue<Action> _actions = new ConcurrentQueue<Action>();
-        private bool _shouldExecute;
         private readonly object _executionLock = new object();
+
+        private readonly ConcurrentQueue<Action> _actionsToExecute = new ConcurrentQueue<Action>();
         private readonly ConcurrentDictionary<Task, object> _executionTasks = new ConcurrentDictionary<Task, object>();
 
-        public BackgroundActions(Action action) => AddAction(action);
+        private bool _shouldExecute;
 
-        public BackgroundActions(IEnumerable<Action> actionsList) => _actions = new ConcurrentQueue<Action>(actionsList);
+        public BackgroundActions(Action action) => Add(action);
+
+        public BackgroundActions(IEnumerable<Action> actionsList) => _actionsToExecute = new ConcurrentQueue<Action>(actionsList);
 
         public Task ActionExecution => Task.WhenAll(_executionTasks.Keys);
 
-        public BackgroundActions AddAction(Action newAction)
+        public BackgroundActions Add(Action newAction)
         {
-            _actions.Enqueue(newAction);
+            _actionsToExecute.Enqueue(newAction);
 
             if (_shouldExecute)
             {
@@ -30,7 +32,7 @@ namespace ActionsLibrary
             return this;
         }
 
-        public async Task StartExecution()
+        public async Task BeginExecuting()
         {
             _shouldExecute = true;
             ExecuteQueueAsync();
@@ -49,7 +51,7 @@ namespace ActionsLibrary
         {
             lock (_executionLock)
             {
-                while (_actions.TryDequeue(out Action actionToExecute))
+                while (_actionsToExecute.TryDequeue(out Action actionToExecute))
                 {
                     actionToExecute();
                 }
