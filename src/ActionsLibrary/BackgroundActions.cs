@@ -1,43 +1,47 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace ActionsLibrary
 {
     public class BackgroundActions
     {
-        private readonly Queue<Action> _actions = new Queue<Action>();
-        private bool _executionStarted;
-        private bool _currentlyExecuting;
+        private readonly ConcurrentQueue<Action> _actions = new ConcurrentQueue<Action>();
+        private bool _shouldExecute;
+        private readonly object _executionLock = new object();
 
         public BackgroundActions(Action action) => AddAction(action);
 
-        public BackgroundActions(IEnumerable<Action> actionsList) => _actions = new Queue<Action>(actionsList);
+        public BackgroundActions(IEnumerable<Action> actionsList) => _actions = new ConcurrentQueue<Action>(actionsList);
 
         public BackgroundActions AddAction(Action newAction)
         {
             _actions.Enqueue(newAction);
-            if (_executionStarted && !_currentlyExecuting)
+
+            if (_shouldExecute)
             {
                 ExecuteQueue();
             }
+
             return this;
         }
 
         public void StartExecution()
         {
-            _executionStarted = true;
+            _shouldExecute = true;
             ExecuteQueue();
         }
 
         private void ExecuteQueue()
         {
-            _currentlyExecuting = true;
-            while (_actions.Count > 0)
+            lock (_executionLock)
             {
-                var actionToExecute = _actions.Dequeue();
-                actionToExecute();
+                Action actionToExecute;
+                while (_actions.TryDequeue(out actionToExecute))
+                {
+                    actionToExecute();
+                }
             }
-            _currentlyExecuting = false;
         }
     }
 }

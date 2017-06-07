@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -84,6 +83,35 @@ namespace ActionsLibrary.Tests
                    .AddAction(() => result /= 2);
 
             const int expectedResult = 3;
+            Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
+        }
+
+        [Test]
+        public void MultipleThreadsCanAddActions()
+        {
+            var result = 0;
+
+            var actions = new BackgroundActions(() => result += 10);
+            actions.StartExecution();
+
+            var taskOne = Task.Run(() =>
+                                   {
+                                       for (var i = 0; i < 10000; i++)
+                                       {
+                                           actions.AddAction(() => result += i);
+                                       }
+                                   });
+
+            var taskTwo = Task.Run(() =>
+                                   {
+                                       for (var i = 0; i < 10000; i++)
+                                       {
+                                           actions.AddAction(() => result -= i);
+                                       }
+                                   });
+            Task.WaitAll(taskOne, taskTwo);
+
+            const int expectedResult = 10;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
         }
     }
