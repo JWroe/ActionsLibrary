@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace ActionsLibrary.Tests
@@ -14,7 +16,7 @@ namespace ActionsLibrary.Tests
             var actionWasExecuted = false;
             var actions = new BackgroundActions(() => actionWasExecuted = true);
 
-            actions.Execute();
+            actions.StartExecution();
 
             Assert.That(actionWasExecuted, Is.True, $"{nameof(actionWasExecuted)} should have been set to true if action was executed as expected");
         }
@@ -28,7 +30,7 @@ namespace ActionsLibrary.Tests
 
             var actions = new BackgroundActions(actionsList);
 
-            actions.Execute();
+            actions.StartExecution();
 
             Assert.That(countOfActionsExecuted, Is.EqualTo(expectedExecutionCount), $"{nameof(countOfActionsExecuted)} should have been {expectedExecutionCount}, but was {countOfActionsExecuted}");
         }
@@ -48,7 +50,7 @@ namespace ActionsLibrary.Tests
 
             var actions = new BackgroundActions(actionsList);
 
-            actions.Execute();
+            actions.StartExecution();
 
             const int expectedResult = 3;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
@@ -63,7 +65,23 @@ namespace ActionsLibrary.Tests
                 .AddAction(() => result -= 4)
                 .AddAction(() => result *= 6)
                 .AddAction(() => result /= 2)
-                .Execute();
+                .StartExecution();
+
+            const int expectedResult = 3;
+            Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
+        }
+
+        [Test]
+        public void ActionsAddedAfterExecutionStartsAreStillExecuted()
+        {
+            var result = 0;
+
+            var actions = new BackgroundActions(() => result += 5);
+            actions.StartExecution();
+
+            actions.AddAction(() => result -= 4)
+                   .AddAction(() => result *= 6)
+                   .AddAction(() => result /= 2);
 
             const int expectedResult = 3;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");

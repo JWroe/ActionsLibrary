@@ -6,6 +6,8 @@ namespace ActionsLibrary
     public class BackgroundActions
     {
         private readonly Queue<Action> _actions = new Queue<Action>();
+        private bool _executionStarted;
+        private bool _currentlyExecuting;
 
         public BackgroundActions(Action action) => AddAction(action);
 
@@ -14,15 +16,28 @@ namespace ActionsLibrary
         public BackgroundActions AddAction(Action newAction)
         {
             _actions.Enqueue(newAction);
+            if (_executionStarted && !_currentlyExecuting)
+            {
+                ExecuteQueue();
+            }
             return this;
         }
 
-        public void Execute()
+        public void StartExecution()
         {
-            foreach (var action in _actions)
+            _executionStarted = true;
+            ExecuteQueue();
+        }
+
+        private void ExecuteQueue()
+        {
+            _currentlyExecuting = true;
+            while (_actions.Count > 0)
             {
-                action();
+                var actionToExecute = _actions.Dequeue();
+                actionToExecute();
             }
+            _currentlyExecuting = false;
         }
     }
 }
