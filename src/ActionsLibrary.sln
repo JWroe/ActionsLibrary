@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionsLibrary", "ActionsLibrary.csproj", "{42DC5546-148B-4DE3-AF66-D850AEFFC274}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionsLibrary", "ActionsLibrary\ActionsLibrary.csproj", "{42DC5546-148B-4DE3-AF66-D850AEFFC274}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionsLibrary.Tests", "..\ActionsLibrary.Tests\ActionsLibrary.Tests.csproj", "{3DB752E6-5C9E-46C4-A6A1-0A35484488C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionsLibrary.Tests", "ActionsLibrary.Tests\ActionsLibrary.Tests.csproj", "{3DB752E6-5C9E-46C4-A6A1-0A35484488C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
