@@ -84,7 +84,7 @@ namespace ActionsLibrary.Tests
                    .AddAction(() => result *= 6)
                    .AddAction(() => result /= 2);
 
-            await actions.QueueExecution;
+            await actions.ActionExecution;
 
             const int expectedResult = 3;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
@@ -113,7 +113,7 @@ namespace ActionsLibrary.Tests
                                            actions.AddAction(() => result -= i);
                                        }
                                    });
-            Task.WaitAll(taskOne, taskTwo, actions.QueueExecution);
+            Task.WaitAll(taskOne, taskTwo, actions.ActionExecution);
 
             const int expectedResult = 10;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
