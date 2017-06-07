@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -10,18 +12,18 @@ namespace ActionsLibrary.Tests
     public class BackgroundActionsTests
     {
         [Test]
-        public void CanExecuteSingleAction()
+        public async Task CanExecuteSingleAction()
         {
             var actionWasExecuted = false;
             var actions = new BackgroundActions(() => actionWasExecuted = true);
 
-            actions.StartExecution();
+            await actions.StartExecution();
 
             Assert.That(actionWasExecuted, Is.True, $"{nameof(actionWasExecuted)} should have been set to true if action was executed as expected");
         }
 
         [Test]
-        public void CanExecuteMultipleActions()
+        public async Task CanExecuteMultipleActions()
         {
             var countOfActionsExecuted = 0;
             const int expectedExecutionCount = 5;
@@ -29,13 +31,13 @@ namespace ActionsLibrary.Tests
 
             var actions = new BackgroundActions(actionsList);
 
-            actions.StartExecution();
+            await actions.StartExecution();
 
             Assert.That(countOfActionsExecuted, Is.EqualTo(expectedExecutionCount), $"{nameof(countOfActionsExecuted)} should have been {expectedExecutionCount}, but was {countOfActionsExecuted}");
         }
 
         [Test]
-        public void ActionsAreExecutedInOrder()
+        public async Task ActionsAreExecutedInOrder()
         {
             var result = 0;
 
@@ -49,18 +51,18 @@ namespace ActionsLibrary.Tests
 
             var actions = new BackgroundActions(actionsList);
 
-            actions.StartExecution();
+            await actions.StartExecution();
 
             const int expectedResult = 3;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
         }
 
         [Test]
-        public void ActionsCanBeAddedAfterObjectCreation()
+        public async Task ActionsCanBeAddedAfterObjectCreation()
         {
             var result = 0;
 
-            new BackgroundActions(() => result += 5)
+            await new BackgroundActions(() => result += 5)
                 .AddAction(() => result -= 4)
                 .AddAction(() => result *= 6)
                 .AddAction(() => result /= 2)
@@ -71,7 +73,7 @@ namespace ActionsLibrary.Tests
         }
 
         [Test]
-        public void ActionsAddedAfterExecutionStartsAreStillExecuted()
+        public async Task ActionsAddedAfterExecutionStartsAreStillExecutedAsync()
         {
             var result = 0;
 
@@ -81,6 +83,8 @@ namespace ActionsLibrary.Tests
             actions.AddAction(() => result -= 4)
                    .AddAction(() => result *= 6)
                    .AddAction(() => result /= 2);
+
+            await actions.QueueExecution;
 
             const int expectedResult = 3;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
@@ -109,10 +113,21 @@ namespace ActionsLibrary.Tests
                                            actions.AddAction(() => result -= i);
                                        }
                                    });
-            Task.WaitAll(taskOne, taskTwo);
+            Task.WaitAll(taskOne, taskTwo, actions.QueueExecution);
 
             const int expectedResult = 10;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
+        }
+
+        [Test]
+        public void BackgroundActionsExecutesOnABackgroundThread()
+        {
+            var watch = Stopwatch.StartNew();
+            var waitTime = TimeSpan.FromSeconds(1);
+            var actions = new BackgroundActions(() => Thread.Sleep(waitTime));
+            actions.StartExecution();
+
+            Assert.That(watch.Elapsed, Is.LessThan(waitTime), $"Elapsed time should have been less than {nameof(waitTime)} ({waitTime}), but was {watch.Elapsed}. Is the call blocking on execution?");
         }
     }
 }
