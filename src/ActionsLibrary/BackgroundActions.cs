@@ -10,13 +10,13 @@ namespace ActionsLibrary
         private readonly ConcurrentQueue<Action> _actions = new ConcurrentQueue<Action>();
         private bool _shouldExecute;
         private readonly object _executionLock = new object();
-        private HashSet<Task> _tasks = new HashSet<Task>();
+        private readonly ConcurrentDictionary<Task, object> _executionTasks = new ConcurrentDictionary<Task, object>();
 
         public BackgroundActions(Action action) => AddAction(action);
 
         public BackgroundActions(IEnumerable<Action> actionsList) => _actions = new ConcurrentQueue<Action>(actionsList);
 
-        public Task ActionExecution => Task.WhenAll(_tasks);
+        public Task ActionExecution => Task.WhenAll(_executionTasks.Keys);
 
         public BackgroundActions AddAction(Action newAction)
         {
@@ -37,14 +37,19 @@ namespace ActionsLibrary
             await ActionExecution;
         }
 
-        private void ExecuteQueueAsync() => _tasks.Add(Task.Run(() => ExecuteQueue()));
+        private void ExecuteQueueAsync() => AddExecutionTask(Task.Run(() => ExecuteQueue()));
+
+        private void AddExecutionTask(Task task)
+        {
+            _executionTasks.TryAdd(task, null);
+            task.ContinueWith(t => _executionTasks.TryRemove(t, out object val));
+        }
 
         private void ExecuteQueue()
         {
             lock (_executionLock)
             {
-                Action actionToExecute;
-                while (_actions.TryDequeue(out actionToExecute))
+                while (_actions.TryDequeue(out Action actionToExecute))
                 {
                     actionToExecute();
                 }
