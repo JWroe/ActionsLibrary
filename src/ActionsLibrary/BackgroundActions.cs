@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ActionsLibrary
@@ -17,7 +16,7 @@ namespace ActionsLibrary
 
         public BackgroundActions(IEnumerable<Action> actionsList) => _actions = new ConcurrentQueue<Action>(actionsList);
 
-        public Task QueueExecution => Task.WhenAll(_tasks);
+        public Task ActionExecution => Task.WhenAll(_tasks);
 
         public BackgroundActions AddAction(Action newAction)
         {
@@ -35,7 +34,7 @@ namespace ActionsLibrary
         {
             _shouldExecute = true;
             ExecuteQueueAsync();
-            await QueueExecution;
+            await ActionExecution;
         }
 
         private void ExecuteQueueAsync() => _tasks.Add(Task.Run(() => ExecuteQueue()));
