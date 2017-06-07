@@ -12,7 +12,7 @@ namespace ActionsLibrary.Tests
         public void CanExecuteSingleAction()
         {
             var actionWasExecuted = false;
-            var actions = new BackgroundActions(new List<Action> { () => actionWasExecuted = true });
+            var actions = new BackgroundActions(() => actionWasExecuted = true);
 
             actions.Execute();
 
@@ -49,6 +49,21 @@ namespace ActionsLibrary.Tests
             var actions = new BackgroundActions(actionsList);
 
             actions.Execute();
+
+            const int expectedResult = 3;
+            Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
+        }
+
+        [Test]
+        public void ActionsCanBeAddedAfterObjectCreation()
+        {
+            var result = 0;
+
+            new BackgroundActions(() => result += 5)
+                .AddAction(() => result -= 4)
+                .AddAction(() => result *= 6)
+                .AddAction(() => result /= 2)
+                .Execute();
 
             const int expectedResult = 3;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");

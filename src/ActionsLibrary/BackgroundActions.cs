@@ -1,16 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace ActionsLibrary
 {
     public class BackgroundActions
     {
-        private readonly IEnumerable<Action> _actions;
+        private readonly IImmutableList<Action> _actions;
 
-        public BackgroundActions(IEnumerable<Action> actions)
+        public BackgroundActions(Action action) : this(ImmutableList.Create(action))
         {
-            _actions = actions;
         }
+
+        public BackgroundActions(IEnumerable<Action> actions) : this(actions.ToImmutableList())
+        {
+        }
+
+        private BackgroundActions(IImmutableList<Action> actions) => _actions = actions;
+
+        public BackgroundActions AddAction(Action newAction) => new BackgroundActions(_actions.Add(newAction));
 
         public void Execute()
         {
