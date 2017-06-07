@@ -1,19 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ActionsLibrary
 {
     public class BackgroundActions
     {
-        private readonly Action _action;
+        private readonly IEnumerable<Action> _actions;
 
-        public BackgroundActions(Action action)
+        public BackgroundActions(IEnumerable<Action> actions)
         {
-            _action = action;
+            _actions = actions;
         }
 
         public void Execute()
         {
-            _action();
+            foreach (var action in _actions)
+            {
+                action();
+            }
         }
     }
 }
