@@ -91,7 +91,7 @@ namespace ActionsLibrary.Tests
         }
 
         [Test]
-        public void MultipleThreadsCanAddActions()
+        public async Task MultipleThreadsCanAddActionsAsync()
         {
             var result = 0;
 
@@ -102,7 +102,7 @@ namespace ActionsLibrary.Tests
                                    {
                                        for (var i = 0; i < 10000; i++)
                                        {
-                                           actions.Add(() => result += i);
+                                           actions.Add(() => result++);
                                        }
                                    });
 
@@ -110,10 +110,12 @@ namespace ActionsLibrary.Tests
                                    {
                                        for (var i = 0; i < 10000; i++)
                                        {
-                                           actions.Add(() => result -= i);
+                                           actions.Add(() => result--);
                                        }
                                    });
-            Task.WaitAll(taskOne, taskTwo, actions.ActionExecution);
+            await taskOne;
+            await taskTwo;
+            await actions.ActionExecution;
 
             const int expectedResult = 10;
             Assert.That(result, Is.EqualTo(expectedResult), $"{nameof(result)} should have been {expectedResult}, but was {result}");
