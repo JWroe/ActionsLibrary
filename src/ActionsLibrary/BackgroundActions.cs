@@ -26,7 +26,7 @@ namespace ActionsLibrary
 
             if (_shouldExecute)
             {
-                ExecuteQueue();
+                ExecuteQueueAsync();
             }
 
             return this;
